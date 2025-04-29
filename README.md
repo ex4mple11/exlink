@@ -4,7 +4,7 @@
 
 ### Оповещения
 
-Telegram: @exl1nk
+**Telegram**: @exl1nk
 
 ## Возможности
 
