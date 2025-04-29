@@ -28,7 +28,7 @@
 
 1. **Клонируйте репозиторий**:
    ```bash
-   git clone https://github.com/your-username/ExLink.git
+   git clone https://github.com/ex4mple11/ExLink.git
    cd ExLink
    ```
 
