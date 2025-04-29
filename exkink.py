@@ -3,204 +3,206 @@ import json
 import webbrowser
 import random
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-                            QPushButton, QLineEdit, QListWidget, QSystemTrayIcon, QMenu,
-                            QAction, QComboBox, QLabel)
+                             QLineEdit, QPushButton, QListWidget, QComboBox, QSystemTrayIcon, QMenu, QLabel)
 from PyQt5.QtCore import QTimer, Qt
-from PyQt5.QtGui import QIcon
-from pathlib import Path
+from PyQt5.QtGui import QIcon, QKeySequence
 
-class LinkOpener(QMainWindow):
+class ExLink(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.setWindowTitle("ExLink")
+        self.setGeometry(100, 100, 400, 600)
         self.links = []
-        self.config_file = Path("links.json")
+        self.current_link_index = 0
+        self.key_code = Qt.Key_F5  # Код клавиши по умолчанию
+        self.is_setting_key = False
         self.load_links()
-        self.initUI()
+        self.init_ui()
         self.init_tray()
 
-    def initUI(self):
-        self.setWindowTitle("exlink")
-        self.setFixedSize(400, 500)
-        
-        # Set modern style
-        self.setStyleSheet("""
-            QMainWindow {
-                background-color: #2b2b2b;
-                color: #ffffff;
-            }
-            QLineEdit {
-                background-color: #3c3f41;
-                border: 1px solid #555;
-                color: #ffffff;
-                padding: 5px;
-                border-radius: 3px;
-            }
-            QPushButton {
-                background-color: #007bff;
-                color: white;
-                border: none;
-                padding: 8px;
-                border-radius: 3px;
-            }
-            QPushButton:hover {
-                background-color: #0056b3;
-            }
-            QListWidget {
-                background-color: #3c3f41;
-                border: 1px solid #555;
-                color: #ffffff;
-                border-radius: 3px;
-            }
-            QComboBox {
-                background-color: #3c3f41;
-                border: 1px solid #555;
-                color: #ffffff;
-                padding: 5px;
-                border-radius: 3px;
-            }
-            QLabel {
-                color: #ffffff;
-            }
-        """)
-
-        # Main widget and layout
+    def init_ui(self):
+        # Главный виджет и layout
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
-        layout = QVBoxLayout(central_widget)
+        main_layout = QVBoxLayout(central_widget)
 
-        # URL input
-        input_layout = QHBoxLayout()
+        # Поле ввода URL
         self.url_input = QLineEdit()
-        self.url_input.setPlaceholderText("Enter URL...")
-        add_button = QPushButton("Add")
-        add_button.clicked.connect(self.add_link)
-        input_layout.addWidget(self.url_input)
-        input_layout.addWidget(add_button)
-        layout.addLayout(input_layout)
+        self.url_input.setPlaceholderText("Введите URL")
+        main_layout.addWidget(self.url_input)
 
-        # Links list
+        # Кнопка "Добавить"
+        self.add_button = QPushButton("Добавить")
+        self.add_button.clicked.connect(self.add_link)
+        main_layout.addWidget(self.add_button)
+
+        # Список ссылок
         self.links_list = QListWidget()
-        self.update_links_list()
-        layout.addWidget(self.links_list)
+        self.links_list.addItems(self.links)
+        main_layout.addWidget(self.links_list)
 
-        # Remove button
-        remove_button = QPushButton("Remove Selected")
-        remove_button.clicked.connect(self.remove_link)
-        layout.addWidget(remove_button)
+        # Кнопка "Удалить выбранное"
+        self.remove_button = QPushButton("Удалить выбранное")
+        self.remove_button.clicked.connect(self.remove_link)
+        main_layout.addWidget(self.remove_button)
 
-        # Timer settings
-        timer_layout = QHBoxLayout()
-        timer_label = QLabel("Timer (seconds):")
-        self.timer_input = QComboBox()
-        self.timer_input.addItems(["Off", "5", "10", "30", "60", "300"])
-        timer_layout.addWidget(timer_label)
-        timer_layout.addWidget(self.timer_input)
-        layout.addLayout(timer_layout)
+        # Layout для кнопок открытия
+        open_buttons_layout = QHBoxLayout()
 
-        # Buttons layout for open actions
-        buttons_layout = QHBoxLayout()
-        
-        # Open random button
-        open_random_button = QPushButton("Open Random")
-        open_random_button.clicked.connect(self.open_random_link)
-        buttons_layout.addWidget(open_random_button)
+        # Кнопка "Открыть случайно"
+        self.open_random_button = QPushButton("Открыть случайно")
+        self.open_random_button.clicked.connect(self.open_random_link)
+        open_buttons_layout.addWidget(self.open_random_button)
 
-        # Open next button (kept for sequential opening)
-        open_button = QPushButton("Open Next")
-        open_button.clicked.connect(self.open_next_link)
-        buttons_layout.addWidget(open_button)
-        
-        layout.addLayout(buttons_layout)
+        # Кнопка "Открыть следующий"
+        self.open_next_button = QPushButton("Открыть следующий")
+        self.open_next_button.clicked.connect(self.open_next_link)
+        open_buttons_layout.addWidget(self.open_next_button)
 
-        # Timer
+        main_layout.addLayout(open_buttons_layout)
+
+        # Выпадающее меню для таймера
+        self.timer_combo = QComboBox()
+        self.timer_combo.addItems(["Без таймера", "5 сек", "10 сек", "30 сек", "60 сек", "300 сек"])
+        self.timer_combo.currentIndexChanged.connect(self.update_timer)
+        main_layout.addWidget(self.timer_combo)
+
+        # Интерфейс для задания клавиши
+        key_layout = QHBoxLayout()
+        key_label = QLabel("Клавиша для случайного открытия:")
+        key_layout.addWidget(key_label)
+        self.key_display = QLabel(self.key_to_string(self.key_code))
+        key_layout.addWidget(self.key_display)
+        self.set_key_button = QPushButton("Задать клавишу")
+        self.set_key_button.clicked.connect(self.start_setting_key)
+        key_layout.addWidget(self.set_key_button)
+        main_layout.addLayout(key_layout)
+
+        # Таймер
         self.timer = QTimer()
         self.timer.timeout.connect(self.open_random_link)
-        self.timer_input.currentTextChanged.connect(self.update_timer)
-        
-        self.current_link_index = 0
+
+        # Стили (темная тема)
+        self.setStyleSheet("""
+            QMainWindow, QWidget { background-color: #2b2b2b; color: #ffffff; }
+            QLineEdit, QListWidget, QComboBox, QLabel { 
+                background-color: #3c3f41; 
+                color: #ffffff; 
+                border: 1px solid #555555; 
+                padding: 5px;
+            }
+            QPushButton { 
+                background-color: #4a90e2; 
+                color: #ffffff; 
+                border: none; 
+                padding: 8px; 
+                border-radius: 4px;
+            }
+            QPushButton:hover { background-color: #357abd; }
+        """)
 
     def init_tray(self):
-        self.tray_icon = QSystemTrayIcon(self)
-        self.tray_icon.setIcon(QIcon("icon.png"))  # You'll need to provide an icon file
-        
+        self.tray_icon = QSystemTrayIcon(QIcon("icon.png"), self)
         tray_menu = QMenu()
-        show_action = QAction("Show", self)
-        quit_action = QAction("Quit", self)
+        show_action = tray_menu.addAction("Показать")
+        quit_action = tray_menu.addAction("Выход")
         show_action.triggered.connect(self.show)
         quit_action.triggered.connect(QApplication.quit)
-        tray_menu.addAction(show_action)
-        tray_menu.addAction(quit_action)
-        
         self.tray_icon.setContextMenu(tray_menu)
+        self.tray_icon.activated.connect(self.tray_activated)
         self.tray_icon.show()
-        
+
+    def tray_activated(self, reason):
+        if reason == QSystemTrayIcon.DoubleClick:
+            self.show()
+
     def load_links(self):
-        if self.config_file.exists():
-            with open(self.config_file, 'r') as f:
-                try:
-                    content = f.read().strip()
-                    if content:
-                        self.links = json.loads(content)
-                    else:
-                        self.links = []
-                except json.JSONDecodeError:
+        try:
+            with open("links.json", "r", encoding="utf-8") as f:
+                content = f.read().strip()
+                if not content:
                     self.links = []
-        else:
+                    self.key_code = Qt.Key_F5
+                else:
+                    data = json.loads(content)
+                    self.links = data.get("links", [])
+                    self.key_code = data.get("key_code", Qt.Key_F5)
+        except (FileNotFoundError, json.JSONDecodeError):
             self.links = []
+            self.key_code = Qt.Key_F5
 
     def save_links(self):
-        with open(self.config_file, 'w') as f:
-            json.dump(self.links, f, indent=4)
+        data = {
+            "links": self.links,
+            "key_code": self.key_code
+        }
+        with open("links.json", "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4)
 
     def add_link(self):
         url = self.url_input.text().strip()
-        if url and url not in self.links:
+        if url:
             self.links.append(url)
-            self.update_links_list()
-            self.save_links()
+            self.links_list.addItem(url)
             self.url_input.clear()
+            self.save_links()
 
     def remove_link(self):
-        selected = self.links_list.selectedItems()
-        if selected:
-            url = selected[0].text()
-            self.links.remove(url)
-            self.update_links_list()
-            self.save_links()
-
-    def update_links_list(self):
-        self.links_list.clear()
-        for url in self.links:
-            self.links_list.addItem(url)
-
-    def update_timer(self, value):
-        self.timer.stop()
-        if value != "Off":
-            interval = int(value) * 1000  # Convert to milliseconds
-            self.timer.start(interval)
+        selected_items = self.links_list.selectedItems()
+        for item in selected_items:
+            self.links.remove(item.text())
+            self.links_list.takeItem(self.links_list.row(item))
+        self.save_links()
 
     def open_random_link(self):
         if self.links:
-            random_url = random.choice(self.links)
-            webbrowser.open(random_url)
+            url = random.choice(self.links)
+            webbrowser.open(url)
 
     def open_next_link(self):
         if self.links:
-            webbrowser.open(self.links[self.current_link_index])
+            url = self.links[self.current_link_index]
+            webbrowser.open(url)
             self.current_link_index = (self.current_link_index + 1) % len(self.links)
+
+    def update_timer(self):
+        interval = self.timer_combo.currentText()
+        self.timer.stop()
+        if interval != "Без таймера":
+            seconds = int(interval.split()[0])
+            self.timer.start(seconds * 1000)
+
+    def start_setting_key(self):
+        self.is_setting_key = True
+        self.set_key_button.setText("Нажмите клавишу...")
+        self.set_key_button.setEnabled(False)
+
+    def key_to_string(self, key_code):
+        return QKeySequence(key_code).toString() or "Unknown"
+
+    def keyPressEvent(self, event):
+        if self.is_setting_key:
+            self.key_code = event.key()
+            self.key_display.setText(self.key_to_string(self.key_code))
+            self.is_setting_key = False
+            self.set_key_button.setText("Задать клавишу")
+            self.set_key_button.setEnabled(True)
+            self.save_links()
+        elif event.key() == self.key_code:
+            self.open_random_link()
 
     def closeEvent(self, event):
         event.ignore()
         self.hide()
         self.tray_icon.showMessage(
-            "exlink",
-            "Application minimized to system tray",
+            "ExLink",
+            "Приложение свернуто в системный трей.",
             QSystemTrayIcon.Information,
             2000
         )
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication(sys.argv)
-    ex = LinkOpener()
-    ex.show()
+    window = ExLink()
+    window.show()
     sys.exit(app.exec_())
