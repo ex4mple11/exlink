@@ -1,6 +1,9 @@
-[
-    "https://google.com/",
-    "https://www.youtube.com/",
-    "https://shots.ink/",
-    "https://soundcloud.com/"
-]
+{
+    "links": [
+        "https://example.com/",
+        "https://google.com/",
+        "https://funpay.com/",
+        "https://shots.ink/"
+    ],
+    "key_code": 16777265
+}
