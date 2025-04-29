@@ -1,156 +1,171 @@
-ExLink
-ExLink is a Python-based GUI application built with PyQt5 that allows users to manage a list of URLs and open them either manually or automatically on a timer. The application runs in the background with a system tray icon, supports random or sequential URL opening, and stores URLs in a JSON file for persistence.
-Features
+# ExLink
 
-Manage URLs: Add, remove, and view URLs in a user-friendly interface.
-Open URLs: Open URLs manually (randomly or sequentially) or automatically on a timer (5, 10, 30, 60, or 300 seconds).
-System Tray: Minimize to the system tray for background operation, with a context menu to show or quit the app.
-Persistent Storage: URLs are saved in a links.json file.
-Modern Design: Dark-themed GUI with a clean, professional look.
-Cross-Platform: Runs on Windows, macOS, and Linux (Windows compilation instructions provided).
+**ExLink** — это приложение с графическим интерфейсом, написанное на **Python** с использованием **PyQt5**. Оно позволяет *управлять списком URL-адресов* и открывать их **вручную** или **автоматически** по таймеру. Приложение работает в фоновом режиме с иконкой в системном трее, поддерживает *случайное* или *последовательное* открытие ссылок и сохраняет URL в файле `links.json`.
 
-Screenshots
-(Add screenshots of the GUI here for better visualization. For example, show the main window, system tray icon, and URL list.)
-Prerequisites
+## Возможности
 
-Python 3.6 or higher (tested with Python 3.13).
-PyQt5 library for the GUI.
-(Optional) PyInstaller for compiling to .exe on Windows.
-(Optional) A PNG icon file (icon.png) for the system tray and .exe icon.
+- **Управление URL**: Добавляйте, удаляйте и просматривайте URL в удобном интерфейсе.
+- **Открытие URL**: 
+  - Вручную: случайное или последовательное открытие.
+  - Автоматически: по таймеру (5, 10, 30, 60 или 300 секунд).
+- **Системный трей**: Сворачивание в трей для работы в фоновом режиме с контекстным меню.
+- **Сохранение данных**: URL сохраняются в файл `links.json`.
+- **Современный дизайн**: Темная тема с чистым и профессиональным видом.
+- **Кроссплатформенность**: Поддержка **Windows**, **macOS** и **Linux** (инструкции для компиляции на Windows).
 
-Installation
+## Скриншоты
 
-Clone the repository:
-git clone https://github.com/ex4mple11/ExLink.git
-cd ExLink
+- Главное окно приложения.
+- Список URL.
 
+*Пример: `![Главное окно](screenshots/main_window.png)`* 
 
-Install dependencies:
-pip install PyQt5
+## Требования
 
+- **Python** 3.6 или выше (*протестировано с Python 3.13*).
+- Библиотека **PyQt5** для графического интерфейса.
+- (*Опционально*) **PyInstaller** для компиляции в `.exe` на Windows.
+- (*Опционально*) Файл иконки `icon.png` (рекомендуемый размер: *16x16* или *32x32* пикселя) для трея и `.exe`.
 
-Prepare the icon (optional):
+## Установка
 
-Place a icon.png file (16x16 or 32x32 pixels recommended) in the project directory for the system tray icon.
-If no icon is available, modify exlink.py to use QIcon() instead of QIcon("icon.png") in the init_tray method.
+1. **Клонируйте репозиторий**:
+   ```bash
+   git clone https://github.com/ex4mple11/ExLink.git
+   cd ExLink
+   ```
 
+2. **Установите зависимости**:
+   ```bash
+   pip install PyQt5
+   ```
 
-Run the application:
-python exlink.py
+3. **Подготовьте иконку** (*опционально*):
+   - Поместите файл `icon.png` в директорию проекта для иконки системного трея.
+   - Если иконка отсутствует, измените в `exlink.py` строку `QIcon("icon.png")` на `QIcon()` в методе `init_tray`.
 
+4. **Запустите приложение**:
+   ```bash
+   python exlink.py
+   ```
 
+## Использование
 
-Usage
+1. **Добавление URL**:
+   - Введите URL в поле ввода и нажмите **«Добавить»**.
+   - URL сохраняются в файл `links.json` в той же директории.
 
-Add URLs:
+2. **Удаление URL**:
+   - Выберите URL в списке и нажмите **«Удалить выбранное»**.
 
-Enter a URL in the input field and click "Add".
-URLs are saved to links.json in the same directory.
+3. **Открытие URL**:
+   - *Вручную*:
+     - Нажмите **«Открыть случайно»** для случайного URL.
+     - Нажмите **«Открыть следующий»** для следующего URL в списке.
+   - *Автоматически*:
+     - Выберите интервал таймера (*5, 10, 30, 60 или 300 секунд*) в выпадающем меню.
+     - Приложение будет открывать *случайный URL* с заданным интервалом.
 
+4. **Системный трей**:
+   - Закройте окно, чтобы свернуть приложение в **системный трей**.
+   - Щелкните *правой кнопкой мыши* по иконке в трее, чтобы *показать приложение* или *закрыть его*.
 
-Remove URLs:
+5. **Работа в фоновом режиме**:
+   - Таймер продолжает открывать случайные URL, даже когда приложение свернуто в трей.
 
-Select a URL in the list and click "Remove Selected".
+## Компиляция в `.exe` (Windows)
 
+Чтобы создать автономный **`.exe`** файл без окна консоли:
 
-Open URLs:
+1. **Установите PyInstaller**:
+   ```bash
+   pip install pyinstaller
+   ```
 
-Manually: Click "Open Random" to open a random URL or "Open Next" to open the next URL in sequence.
-Automatically: Select a timer interval (5, 10, 30, 60, or 300 seconds) from the dropdown. The app will open a random URL at the specified interval.
+2. **Скомпилируйте скрипт**:
+   ```bash
+   pyinstaller --onefile --windowed --icon=icon.png --add-data "icon.png;." exlink.py
+   ```
+   - `--onefile`: Создает единый `.exe` файл.
+   - `--windowed`: Скрывает окно консоли (*только GUI*).
+   - `--icon=icon.png`: Устанавливает иконку для `.exe`.
+   - `--add-data "icon.png;."`: Включает `icon.png` для системного трея.
 
+3. **Найдите `.exe`**:
+   - Файл **`exlink.exe`** будет в папке `dist`.
+   - Запустите его *двойным щелчком*. Убедитесь, что `icon.png` включен в сборку для работы иконки трея.
 
-System Tray:
+4. **(Опционально) Включите `links.json`**:
+   - Чтобы включить предварительно заполненный `links.json`, добавьте:
+     ```bash
+     --add-data "links.json;."
+     ```
 
-Close the window to minimize the app to the system tray.
-Right-click the tray icon to show the app or quit.
+## Структура файлов
 
+- **`exlink.py`**: Основной Python-скрипт приложения.
+- **`links.json`**: Автоматически создаваемый файл для хранения URL (*создается при добавлении первого URL*).
+- **`icon.png`**: (*Опционально*) Иконка для системного трея и `.exe`.
+- **`README.md`**: Этот файл документации.
 
-Background Operation:
+## Пример `links.json`
 
-The timer continues to open random URLs even when the app is minimized to the tray.
-
-
-
-Compiling to .exe (Windows)
-To create a standalone .exe file without a console window:
-
-Install PyInstaller:
-pip install pyinstaller
-
-
-Compile the script:
-pyinstaller --onefile --windowed --icon=icon.png --add-data "icon.png;." exlink.py
-
-
---onefile: Creates a single .exe.
---windowed: Hides the console window (GUI-only).
---icon=icon.png: Sets the .exe icon.
---add-data "icon.png;.": Includes icon.png for the system tray.
-
-
-Find the .exe:
-
-The exlink.exe file will be in the dist folder.
-Run it by double-clicking. Ensure icon.png is included in the build for the tray icon to work.
-
-
-(Optional) Include links.json:
-
-To include a pre-populated links.json, add:--add-data "links.json;."
-
-
-
-
-
-File Structure
-
-exlink.py: Main Python script for the application.
-links.json: Auto-generated file to store URLs (created on first URL addition).
-icon.png: (Optional) Icon for the system tray and .exe.
-README.md: This documentation file.
-
-Example links.json
+```json
 [
     "https://example.com",
     "https://google.com",
     "https://github.com"
 ]
+```
 
-Troubleshooting
+## Устранение неполадок
 
-No system tray icon:
-Ensure icon.png is in the project directory and included in the .exe build with --add-data.
-Alternatively, replace QIcon("icon.png") with QIcon() in exlink.py.
+- **Иконка в системном трее не отображается**:
+  - Убедитесь, что `icon.png` находится в директории проекта и включен в сборку `.exe` с помощью `--add-data`.
+  - Альтернативно, замените `QIcon("icon.png")` на `QIcon()` в `exlink.py`.
 
+- **URL не открываются**:
+  - Проверьте, что ваш *браузер по умолчанию* настроен корректно.
+  - Убедитесь, что URL в `links.json` *валидны*.
 
-URLs not opening:
-Verify that your default web browser is set correctly.
-Check that URLs in links.json are valid.
+- **`.exe` не запускается**:
+  - Убедитесь, что **PyQt5** установлен перед компиляцией:
+    ```bash
+    pip install PyQt5
+    ```
+  - Запустите `.exe` из командной строки, чтобы увидеть сообщения об ошибках:
+    ```bash
+    .\dist\exlink.exe
+    ```
 
+- **Антивирус блокирует `.exe`**:
+  - Добавьте `.exe` в *исключения антивируса* или используйте цифровой сертификат для подписи.
 
-.exe not running:
-Ensure PyQt5 is installed before compiling (pip install PyQt5).
-Run the .exe from the command line to see any error messages:.\dist\exlink.exe
+## Внесение изменений
 
+1. Сделайте *форк* репозитория.
+2. Создайте ветку для новой функции:
+   ```bash
+   git checkout -b feature-name
+   ```
+3. Зафиксируйте изменения:
+   ```bash
+   git commit -m "Добавлена функция"
+   ```
+4. Отправьте ветку в репозиторий:
+   ```bash
+   git push origin feature-name
+   ```
+5. Создайте *Pull Request*.
 
+## Лицензия
 
+**Этот проект является проприетарным и не лицензирован для публичного использования.** Свяжитесь с автором для получения разрешений.
 
-Antivirus flags .exe:
-Add the .exe to your antivirus exclusions or use a digital certificate to sign it.
+## Контакты
 
+Для вопросов или предложений создайте *issue* или свяжитесь: (Telegram) @ex4mple11bio.
 
+---
 
-Contributing
-
-Fork the repository.
-Create a feature branch (git checkout -b feature-name).
-Commit changes (git commit -m "Add feature").
-Push to the branch (git push origin feature-name).
-Open a Pull Request.
-
-License
-This project is proprietary and not licensed for public use. Contact the author for permissions.
-Contact
-For questions or suggestions, open an issue or contact Telegram: @ex4mple11bio.
-
-Built with ❤️ using Python and PyQt5.
+*Создано с ❤️ на **Python** и **PyQt5**.*
